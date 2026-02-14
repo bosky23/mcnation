@@ -1,0 +1,1742 @@
+#options:
+#
+#
+#
+#  classes: Assassin, Chevalier, Mineur, Héros, Barbare, Félin
+#
+#
+#
+#  hidden_classes: sans_class, Foudroyeur, Mage_de_feu, Demon, Hydromancien, Maitre_des_tempetes, Healer, Maitrelame, Paladin, Enigmatique, Runiste, Terreur, annuleur, Contreur, noel, fée, _equilibrant, _esprit_de_ruche
+#
+#  
+#
+#  block_class: leather_helmet, shield, iron_pickaxe, emerald, iron_axe, feather, lightning_rod, fire_charge, nether_star, water_bucket, trident, golden_apple, diamond_sword, totem_of_undying, jigsaw, vex_armor_trim_smithing_template, sculk_shrieker, milk_bucket, structure_void, spruce_sapling, elytra, experience_bottle, honeycomb
+#
+#      
+#
+#  class_price: 10000 
+
+
+
+function cleanClassName(c: text) :: text:
+
+
+
+    set {_cleaned} to {_c}
+
+
+
+    replace all " " with "" in {_cleaned}
+
+
+
+    replace all "é" with "e" in {_cleaned}
+
+
+
+    replace all "è" with "e" in {_cleaned}
+
+
+
+    replace all "ê" with "e" in {_cleaned}
+
+
+
+    replace all "ë" with "e" in {_cleaned}
+
+
+
+    replace all "à" with "a" in {_cleaned}
+
+
+
+    replace all "â" with "a" in {_cleaned}
+
+
+
+    replace all "î" with "i" in {_cleaned}
+
+
+
+    replace all "ï" with "i" in {_cleaned}
+
+
+
+    replace all "ô" with "o" in {_cleaned}
+
+
+
+    replace all "û" with "u" in {_cleaned}
+
+
+
+    replace all "ç" with "c" in {_cleaned}
+
+
+
+    set {_cleaned} to lowercase {_cleaned}
+
+
+
+    return {_cleaned}
+
+
+
+
+
+
+
+# Effets des classes permanent-------------------------------------------------------
+
+
+
+function applyClassEffects(p: player, c: text):
+
+
+
+
+
+    if {_c} = "assassin":
+
+        set {_p}'s max health to 10
+
+
+
+
+
+        
+
+
+
+
+
+
+on right click: #--------------------------------------------------------------------------------------------------------------------------------------------------------competence de baton
+
+    
+
+            
+
+    if lore of event-item is "&7click droit: utiliser la competence de class":                                                          # utilisation avec un item de competence
+
+        if "%{class.active::%uuid of player%}%" is "_esprit_de_ruche":
+
+            if {mana::%player%} > 50:
+
+                add -50 to {mana::%player%}
+
+                if world of player is not "donjon":
+
+                    set {class_tp::%player%} to location of player
+
+                    teleport player at location(2000, 1, 2000, "donjon") 
+
+                    wait 5 tick
+
+                    set gamemode of player to survival
+
+                    
+
+                    apply regeneration 250 without particles to player for 1 days
+
+                    apply saturation 10 without particles to player for 1 days
+
+                    allow flight for player
+
+                else:
+
+                    if {class_tp::%player%} is set:
+
+                        teleport player at {class_tp::%player%}
+
+                        
+
+                    else:
+
+                        execute player command "/spawn"
+
+                    remove saturation from the player  
+
+                    
+
+                    remove regeneration from the player 
+
+                    disallow flight for player
+
+                
+
+                
+
+        else if "%{class.active::%uuid of player%}%" is "hydromancien":
+
+            if {mana::%player%} > 20:
+
+                set {_world} to world of player
+
+                set weather in world "%{_world}%" to rain
+
+                add -20 to {mana::%player%}
+
+                
+
+        else if "%{class.active::%uuid of player%}%" is "maitre_des_tempetes":
+
+            if {mana::%player%} > 40:
+
+                set {_world} to world of player
+
+                set weather in world "%{_world}%" to thunder
+
+                loop all players in radius 20 around player:
+
+                    if loop-player != player:
+
+                        set {_loc} to location of loop-player
+
+                        strike lightning effect at {_loc}
+
+                        damage loop-player by 10 with cause lightning
+
+                        #strike lightning at {_loc}
+
+                add -40 to {mana::%player%}        
+
+                
+
+            
+
+        else if "%{class.active::%uuid of player%}%" is "mage_de_feu":
+
+            if {mana::%player%} > 10:
+
+                set {_world} to world of player
+
+                set {_loc} to location of player
+
+                spawn fireball at {_loc}
+
+                add -10 to {mana::%player%}  
+
+                
+
+        else if "%{class.active::%uuid of player%}%" is "demon":    
+
+            if {class_demon_active::%player%} is not set:
+
+                set {class_demon_active::%player%} to true
+
+            else if {class_demon_active::%player%} is false:
+
+                set {class_demon_active::%player%} to true
+
+            else if {class_demon_active::%player%} is true:
+
+                set {class_demon_active::%player%} to false
+
+                
+
+        else if "%{class.active::%uuid of player%}%" is "_equilibrant":
+
+            if {mana::%player%} > 30:
+
+                heal player by 2 heart
+
+                add -30 to {mana::%player%}
+
+                
+
+        else if "%{class.active::%uuid of player%}%" is "healer":
+
+            send "&2tape un joueur avec cette item pour le soigner !" to player
+
+        
+
+        else:
+
+            send "pas de competence active pour cette class !" to player
+
+        
+
+    else if lore of event-item is "&7click droit: ne pas avoir de class pendant 1h en echange de 20 de mana":
+
+        set {_cooldown} to difference between now and {class.cooldown::%uuid of player%}
+
+        if {_cooldown} > 3600 seconds:
+
+            set {class.active::%uuid of player%} to "sans_class"
+
+            set {class.cooldown::%uuid of player%} to now
+
+            add 20 to {mana_max::%player%}
+
+            send "&2tu as recus 10 de mana en plus !" to player
+
+        else:
+
+            send "&4tu doit attendre de pouvoir changer de class !" to player
+
+
+
+        
+
+        
+
+command /classbuy [<text>]:
+
+
+
+    trigger:
+
+
+
+        if arg 1 is not set:
+
+
+
+            send "&6Achetez une classe principale pour 10 000 !"
+
+
+
+            send "&7Utilisation: &e/classbuy <classe>"
+
+
+
+            send "&7Classes disponibles: &e{@classes}"
+
+
+
+            stop
+
+
+
+
+
+
+
+        set {_chosen} to cleanClassName(arg 1)
+
+
+
+        set {_found} to false
+
+
+
+        set {_originalName} to ""
+
+
+
+        loop split "{@classes}" at ", ":
+
+
+
+            if cleanClassName(loop-value) is {_chosen}:
+
+
+
+                set {_found} to true
+
+
+
+                set {_originalName} to loop-value
+
+
+
+        set {_hidden::*} to split "{@hidden_classes}" at ", "
+
+
+
+        if {_originalName} is in {_hidden::*}:
+
+
+
+            send "&cCette classe n'est pas disponible à l'achat."
+
+
+
+            stop
+
+
+
+        
+
+
+
+
+
+
+
+        if {_found} is false:
+
+
+
+            send "&cCette classe n'existe pas ou ne peut pas être achetée."
+
+
+
+            stop
+
+
+
+
+
+
+
+        if {class.unlocked::%uuid of player%::%{_chosen}%} is set:
+
+
+
+            send "&cVous possédez déjà la classe &6%{_originalName}%&c."
+
+
+
+            stop
+
+
+
+
+
+
+
+        # Vérification de l'argent avec Vault
+
+
+
+        if player's balance < {@class_price}:
+
+
+
+            send "&cVous avez besoin de &e{@class_price}$ &cpour acheter cette classe."
+
+
+
+            stop
+
+
+
+
+
+
+
+        remove {@class_price} from player's balance
+
+
+
+        set {class.unlocked::%uuid of player%::%{_chosen}%} to true
+
+
+
+        send "&aVous avez acheté la classe &6%{_originalName}% &apour &e{@class_price}$ !"
+
+
+
+        send "&7Activez-la avec &e/class active %{_originalName}%"
+
+
+
+
+
+
+
+command /class [<text>] [<text>]:
+
+
+
+    trigger:
+
+
+
+        if arg 1 is "list":
+
+
+
+            set {_main::*} to split "{@classes}" at ", "
+
+
+
+            set {_hidden::*} to split "{@hidden_classes}" at ", "
+
+
+
+            set {_classes::*} to {_main::*}
+
+
+
+
+
+
+
+            send "&6-- Classes disponibles --"
+
+
+
+            
+
+
+
+            loop {_classes::*}:
+
+
+
+                set {_cleaned} to cleanClassName(loop-value)
+
+
+
+                if {_cleaned} is in {_hidden::*}:
+
+
+
+                    stop
+
+
+
+                if {class.unlocked::%uuid of player%::%{_cleaned}%} is set:
+
+
+
+                    if {class.active::%uuid of player%} is {_cleaned}:
+
+
+
+                        send "&a- %loop-value% &7(activée)"
+
+
+
+                    else:
+
+
+
+                        send "&a- %loop-value%"
+
+
+
+                else:
+
+
+
+                    send "&7- %loop-value% &8(non débloquée)"
+
+
+
+            #send "&6-- Classes special disponibles --"        
+
+
+
+            loop {_hidden::*}:
+
+
+
+                set {_cleaned} to cleanClassName(loop-value)
+
+
+
+                #if {_cleaned} is in {_hidden::*}:
+
+
+
+                #    stop
+
+
+
+                if {class.unlocked::%uuid of player%::%{_cleaned}%} is set:
+
+
+
+                    if {class.active::%uuid of player%} is {_cleaned}:
+
+
+
+                        send "&a- %loop-value% &7(activée)"
+
+
+
+                    else:
+
+
+
+                        send "&a- %loop-value%"
+
+
+
+                #else:
+
+
+
+                #    send "&7- %loop-value% &8(non débloquée)"        
+
+
+
+            stop
+
+
+
+
+
+        if arg 1 is "competence":
+
+    
+
+            set {_stick} to stick
+
+            set name of {_stick} to "&d Bâton de compétences "
+
+            set lore of {_stick} to "&7click droit: utiliser la competence de class"
+
+    
+
+            give {_stick} to player
+
+    
+
+            
+
+    
+
+            send "&aTu reçois ton &dBâton de compétences&a."
+
+            stop
+
+        if arg 1 is "active":
+
+
+
+            if arg 2 is set:
+
+
+
+                set {_chosen} to cleanClassName(arg 2)
+
+
+
+                set {_classes::*} to split "{@classes}" at ", "
+
+
+
+                set {_found} to false
+
+
+
+                set {_hidden::*} to split "{@hidden_classes}" at ", "
+
+                set {_cooldown} to difference between now and {class.cooldown::%uuid of player%}
+
+                if {_cooldown} < 3600 seconds:
+
+                    send "&cVous devez attendre %difference between 3600 seconds and {_cooldown}% avant de changer de classe à nouveau."
+
+                    stop
+
+                
+
+
+
+                loop {_classes::*}:
+
+
+
+                    if cleanClassName(loop-value) is {_chosen}:
+
+
+
+                        set {_found} to true
+
+
+
+                        set {_originalName} to loop-value
+
+
+
+                loop {_hidden::*}:
+
+
+
+                    if cleanClassName(loop-value) is {_chosen}:
+
+
+
+                        set {_found} to true
+
+
+
+                        set {_originalName} to loop-value
+
+
+
+                if {_found} is false:
+
+
+
+                    send "&cCette classe n'existe pas."
+
+
+
+                    stop
+
+
+
+                if {class.unlocked::%uuid of player%::%{_chosen}%} is not set:
+
+
+
+                    send "&cVous n'avez pas débloqué cette classe."
+
+
+
+                    stop
+
+                clear all potion effects of player 
+
+                set {_p}'s max health to 10
+
+                if {class.active::%uuid of player%} is "noel":
+
+                    set {_id} to {noel::%{player}%} 
+
+                    set {_npc} to citizen from id {_id}
+
+                    execute console command "/npc remove %{_id}%"
+
+                else if {class.active::%uuid of player%} is "fee":
+
+                    set player's flying mode to false
+
+
+
+                set {class.active::%uuid of player%} to {_chosen}
+
+                set {class.cooldown::%uuid of player%} to now
+
+                #execute player command "/skill reload"
+
+
+
+                applyClassEffects(player, {_chosen})
+
+                #send "%{_chosen}%"
+
+                if {_chosen} is "noel":
+
+                    set {_test2} to a random number between 1 and 2
+
+                    
+
+                    
+
+                    set {_loc} to location of player
+
+                    
+
+                    create an citizen named "noel" at {_loc}
+
+                    set {_test} to citizen id of last spawned citizen
+
+                    execute console command "/npc select %{_test}%"
+
+                    
+
+                    
+
+                    set {noel::%{player}%} to {_test}
+
+                    execute console command "/npc rename Noel_%{_test}%"
+
+                    if {_test2} < 1.5:
+
+                        execute console command "/npc type fox"
+
+                        execute console command "/npc fox --type SNOW"
+
+                    else:
+
+                        execute console command "/npc type snow_golem"
+
+                        execute console command "/npc snowgolem -f"
+
+                        
+
+                    execute console command "/npc hidename"
+
+                    execute console command "/npc owner %{player}%"
+
+                    execute console command "/npc follow --enable true -p %player%"
+
+                    set {_npc} to citizen from id {_test}
+
+                    
+
+                    #respawn {_npc} at player
+
+                
+
+
+
+                send "&aClasse &6%{_originalName}% &aactivée avec succès !"
+
+
+
+                stop
+
+
+
+            else:
+
+
+
+                send "&cUtilisation: /class active <classe>"
+
+
+
+                stop
+
+
+
+
+
+
+
+        if arg 1 is "help" :
+
+
+
+            send "&6Commandes des classes:"
+
+
+
+            send "&e/class list &7- liste des classes"
+
+
+
+            send "&e/class active <classe> &7- active une classe"
+
+
+
+            send "&e/class help &7- affiche l’aide"
+
+
+
+            stop
+
+
+
+        if arg 1 is not set:
+
+        
+
+        
+
+            set metadata tag "currentGui" of player to "classgui"
+
+            set {_classes::*} to split "{@classes}" at ", "
+
+            set {_hidden::*} to split "{@hidden_classes}" at ", "
+
+            set {_block_class::*} to split "{@block_class}" at ", "
+
+            
+
+            set {_gui} to chest inventory with 6 rows named "Class"
+
+            
+
+            set {_test} to 1
+
+            loop 5 times: # lignes 0 à 4 (on exclut la dernière)
+
+                set {_row} to loop-number-1
+
+                add -1 to {_row}
+
+            
+
+                loop 8 times: # colonnes 0 à 7 (on exclut la dernière)
+
+                    set {_col} to loop-number-2
+
+                    add -1 to {_col}
+
+            
+
+                    set {_slot} to {_row} * 9 + {_col}
+
+                    
+
+                    if {_test} <= 6:
+
+                        set {_item} to {_block_class::%{_test}%} parsed as item
+
+                        set {_class} to cleanClassName({_classes::%{_test}%})
+
+                        if {class.unlocked::%uuid of player%::%{_class}%} is not set:
+
+                            set line 2 of lore of {_item} to "&4class non obtenue, &3click droit pour acheter ! (10 000 d'argent)"
+
+                        else:
+
+                            set line 2 of lore of {_item} to "&2class obtenue"
+                        set {_nbrclass} to 0    
+                        loop all offline players:
+                            set {_player} to loop-value-3
+                            if {_player} is not "Bosky2311":
+                                if {class.unlocked::%uuid of {_player} %::%{_class}%} is set:
+                                    add 1 to {_nbrclass}
+                        set line 3 of lore of {_item} to "&fpersonnes ayant la class : %{_nbrclass}%"
+
+                        set slot {_slot} of {_gui} to {_item} named "&r&5%{_classes::%{_test}%}%"
+
+                        
+
+                    else:
+
+                        set {_test2} to {_test} - 5
+
+                        if {_hidden::%{_test2}%} is set:
+
+                            set {_item} to {_block_class::%{_test}%} parsed as item
+
+                            set {_class} to cleanClassName({_hidden::%{_test2}%})
+
+                            if {class.unlocked::%uuid of player%::%{_class}%} is not set:
+
+                                set line 2 of lore of {_item} to "&4class non obtenue"
+
+                            else:
+
+                                set line 2 of lore of {_item} to "&2class obtenue"
+                            set {_nbrclass} to 0
+                            loop all offline players:
+                                set {_player} to loop-value-3
+                                if {_player} is not "Bosky2311":
+                                    if {class.unlocked::%uuid of {_player} %::%{_class}%} is set:
+                                        add 1 to {_nbrclass}
+                            set line 3 of lore of {_item} to "&fpersonnes ayant la class : %{_nbrclass}%"
+                            set slot {_slot} of {_gui} to {_item} named "&r&5%{_hidden::%{_test2}%}%"   
+
+                        else:
+
+                            set slot {_slot} of {_gui} to purple stained glass pane named "&r&5futur class !"  
+
+                    
+
+                    add 1 to {_test}
+
+            
+
+            
+
+            
+
+            
+
+            set {_item} to clock named "&5temps restant avant pouvoir changer de class"
+
+            
+
+            set {_cooldown} to difference between now and {class.cooldown::%uuid of player%}
+
+            if {_cooldown} < 3600 seconds:
+
+                set line 1 of lore of {_item} to "&4%difference between 3600 seconds and {_cooldown}%"
+
+                #send "&cVous devez attendre %difference between 3600 seconds and {_cooldown}% avant de changer de classe à nouveau."
+
+            else:
+
+                set line 1 of lore of {_item} to "&2vous pouvez changer de class !"
+
+            set slot 45 of {_gui} to {_item}
+
+            
+
+            set {_item} to player head named "&6classement"
+
+            set {_top1} to 0
+
+            set {_top2} to 0
+
+            set {_top3} to 0
+
+            
+
+            set {_top1p} to "aucun"
+
+            set {_top2p} to "aucun"
+
+            set {_top3p} to "aucun"
+
+            loop all offline players:
+
+                set {_player} to loop-value-1
+
+                set {_test4} to size of {class.unlocked::%uuid of {_player}%::*}
+
+                if "%{_player}%" is not "Bosky2311":
+
+                
+
+                    if  {_test4} > 0:
+
+                        if {_test4} > {_top1}:
+
+                            set {_top3} to {_top2}
+
+                            set {_top3p} to {_top2p}
+
+                    
+
+                            set {_top2} to {_top1}
+
+                            set {_top2p} to {_top1p}
+
+                    
+
+                            set {_top1} to {_test4}
+
+                            set {_top1p} to name of {_player}
+
+                    
+
+                        # TOP 2
+
+                        else if {_test4} > {_top2}:
+
+                            set {_top3} to {_top2}
+
+                            set {_top3p} to {_top2p}
+
+                    
+
+                            set {_top2} to {_test4}
+
+                            set {_top2p} to name of {_player}
+
+                    
+
+                        # TOP 3
+
+                        else if {_test4} > {_top3}:
+
+                            set {_top3} to {_test4}
+
+                            set {_top3p} to name of {_player}
+
+            set line 1 of lore of {_item} to "&6🥇 %{_top1p}% &7- nombre de class : %{_top1}%"
+
+            
+
+            
+
+            set line 2 of lore of {_item} to "&f🥈 %{_top2p}% &7- nombre de class : %{_top2}%"
+
+           
+
+            
+
+            set line 3 of lore of {_item} to "&c🥉 %{_top3p}% &7- nombre de class : %{_top3}%"
+
+           
+
+            set slot 8 of {_gui} to {_item}              
+
+                
+
+                
+
+                
+
+            
+
+            
+
+            
+
+            
+
+            
+
+            open {_gui} to player
+
+            
+
+            
+
+            
+
+            
+
+            
+
+
+
+            #send "&6Commandes des classes:"
+
+
+
+            #send "&e/class list &7- liste des classes"
+
+
+
+            #send "&e/class active <classe> &7- active une classe"
+
+
+
+            #send "&e/class help &7- affiche l’aide"
+
+
+
+            stop
+
+
+
+        
+
+        
+
+        
+
+on inventory click:                                      # gestion gui du /class
+
+    set {_tag} to metadata tag "currentGui" of player
+
+    if name of event-inventory is "Class":
+
+        #send "%event-click type%"
+
+        loop {slot_dispo::*}:
+
+            if "%event-click type%" is "right mouse button":
+
+                if loop-value < 5:
+
+                    set {_test3} to name of event-item stack
+
+                    set {_test3} to uncolored {_test3}
+
+                    execute player command "/classbuy %{_test3}%"
+
+                    cancel event
+
+                    stop
+
+            
+
+           
+
+            if event-slot is loop-value:
+
+                set {_test3} to name of event-item stack
+
+                set {_test3} to uncolored {_test3}
+
+                if player is op:
+
+                    execute player command "/class_ active %{_test3}%"
+
+                else:
+
+                    execute player command "/class active %{_test3}%"
+
+        cancel event
+
+           
+
+           
+
+
+
+on inventory close:
+
+    set {_tag} to metadata tag "currentGui" of player
+
+    delete metadata tag "currentGui" of player
+
+
+
+
+
+command /class_ [<text>] [<text>] [<offlineplayer>]:
+
+
+
+    permission: class.admin
+
+
+
+    permission message: &cVous n'avez pas la permission.
+
+
+
+    trigger:
+
+
+
+        if arg 1 is not set:
+
+
+
+            send "&cUsage: /class_ add/remove <classe> <joueur>"
+
+
+
+            stop
+
+
+
+        if arg 2 is not set :
+
+
+
+            send "&cUsage: /class_ add/remove <classe> <joueur>"
+
+
+
+            stop 
+
+
+
+        if arg 3 is not set:
+
+            if arg 1 is "active":
+
+
+
+                if arg 2 is set:
+
+    
+
+                    set {_chosen} to cleanClassName(arg 2)
+
+    
+
+                    set {_classes::*} to split "{@classes}" at ", "
+
+    
+
+                    set {_found} to false
+
+    
+
+                    set {_hidden::*} to split "{@hidden_classes}" at ", "
+
+                    
+
+                    
+
+    
+
+                    loop {_classes::*}:
+
+    
+
+                        if cleanClassName(loop-value) is {_chosen}:
+
+    
+
+                            set {_found} to true
+
+    
+
+                            set {_originalName} to loop-value
+
+    
+
+                    loop {_hidden::*}:
+
+    
+
+                        if cleanClassName(loop-value) is {_chosen}:
+
+    
+
+                            set {_found} to true
+
+    
+
+                            set {_originalName} to loop-value
+
+    
+
+                    if {_found} is false:
+
+    
+
+                        send "&cCette classe n'existe pas."
+
+    
+
+                        stop
+
+    
+
+                    if {class.unlocked::%uuid of player%::%{_chosen}%} is not set:
+
+    
+
+                        send "&cVous n'avez pas débloqué cette classe."
+
+    
+
+                        stop
+
+                    clear all potion effects of player   
+
+                    
+
+                    if {class.active::%uuid of player%} is "noel":
+
+                        set {_id} to {noel::%{player}%} 
+
+                        set {_npc} to citizen from id {_id}
+
+                        execute console command "/npc remove %{_id}%"
+
+                    else if {class.active::%uuid of player%} is "fee":
+
+                        set player's flying mode to false
+
+    
+
+                    set {class.active::%uuid of player%} to {_chosen}
+
+                    set {class.cooldown::%uuid of player%} to now
+
+    
+
+                    applyClassEffects(player, {_chosen})
+
+                    #send "%{_chosen}%"
+
+                    if {_chosen} is "noel":
+
+                        set {_test2} to a random number between 1 and 2
+
+                        
+
+                        
+
+                        set {_loc} to location of player
+
+                        
+
+                        create an citizen named "noel" at {_loc}
+
+                        set {_test} to citizen id of last spawned citizen
+
+                        execute console command "/npc select %{_test}%"
+
+                        
+
+                        
+
+                        set {noel::%{player}%} to {_test}
+
+                        execute console command "/npc rename Noel_%{_test}%"
+
+                        if {_test2} < 1.5:
+
+                            execute console command "/npc type fox"
+
+                            execute console command "/npc fox --type SNOW"
+
+                        else:
+
+                            execute console command "/npc type snow_golem"
+
+                            execute console command "/npc snowgolem -f"
+
+                            
+
+                        execute console command "/npc hidename"
+
+                        execute console command "/npc owner %{player}%"
+
+                        execute console command "/npc follow --enable true -p %player%"
+
+                        set {_npc} to citizen from id {_test}
+
+                        
+
+                        #respawn {_npc} at player
+
+                        
+
+                    send "&aClasse &6%{_originalName}% &aactivée avec succès !"
+
+    
+
+                    stop
+
+    
+
+                else:
+
+    
+
+                    send "&cUtilisation: /class_ active <classe>"
+
+    
+
+                    stop
+
+            else:
+
+                send "&cUsage: /class_ add/remove <classe> <joueur>"
+
+
+
+                stop    
+
+
+
+
+
+
+
+        set {_clean} to cleanClassName(arg 2)
+
+
+
+        #set {_classes::*} to split "{@classes}" at ", "
+
+
+
+        #set {_valid} to false
+
+
+
+        set {_all::*} to split "{@classes}, {@hidden_classes}" at ", "
+
+
+
+        set {_valid} to false
+
+
+
+        loop {_all::*}:
+
+
+
+            if cleanClassName(loop-value) is {_clean}:
+
+
+
+                set {_valid} to true
+
+
+
+                set {_originalName} to loop-value
+
+
+
+
+
+
+
+        loop {_classes::*}:
+
+
+
+            if cleanClassName(loop-value) is {_clean}:
+
+
+
+                set {_valid} to true
+
+
+
+                set {_originalName} to loop-value
+
+
+
+        if {_valid} is false:
+
+
+
+            send "&cClasse inconnue: %arg 2%"
+
+
+
+            stop
+
+
+
+
+
+
+
+        if arg 1 is "add":
+
+
+
+            set {class.unlocked::%uuid of arg 3%::%{_clean}%} to true
+
+
+
+            send "&aClasse &6%{_originalName}% &aajoutée à %arg 3%."
+
+
+
+            stop
+
+
+
+
+
+
+
+        if arg 1 is "remove":
+
+
+
+            delete {class.unlocked::%uuid of arg 3%::%{_clean}%}
+
+
+
+            send "&cClasse &6%{_originalName}% &cretirée de %arg 3%."
+
+
+
+            stop
+
+
+
+
+
+
+
+        send "&cCommande inconnue. Utilisez /class_ add/remove <classe> <joueur>"
+
+
+
+command /classreligion [<text>] [<offlineplayer>]:
+
+    trigger:
+
+        
+
+        if name of player is "___Thanatos_____":
+
+            
+
+            if arg-1 is "give":
+
+                
+
+                execute console command "/class_ add _equilibrant %arg-2%"
+
+                send "&6tu as recus la class _equilibrant !" to arg-2
+
+                
+
+            else if arg-1 is "remove":
+
+                execute console command "/class_ remove _equilibrant %arg-2%"
+
+                send "&6tu as perdu la class _equilibrant !" to arg-2
+
+        if name of player is "Volon_taire":
+
+            
+
+            if arg-1 is "give":
+
+                
+
+                execute console command "/class_ add _esprit_de_ruche %arg-2%"
+
+                send "&6tu as recus la class _esprit_de_ruche !" to arg-2
+
+                
+
+            else if arg-1 is "remove":
+
+                execute console command "/class_ remove _esprit_de_ruche %arg-2%"
+
+                send "&6tu as perdu la class _esprit_de_ruche !" to arg-2        
+
+        
+
+
+
+command /classfree [<text>]:
+
+
+
+    trigger:
+
+
+
+        set {_uuid} to uuid of player
+
+
+
+
+
+
+
+        if {class.freechosen::%{_uuid}%} is set:
+
+
+
+            send "&cVous avez déjà choisi votre classe gratuite : &6%{class.freechosen::%{_uuid}%}%"
+
+
+
+            stop
+
+
+
+
+
+
+
+        if arg 1 is not set:
+
+
+
+            send "&6Choisissez une classe gratuite parmi : &e{@classes}"
+
+
+
+            send "&7Utilisation : &e/classfree <classe>"
+
+
+
+            stop
+
+
+
+
+
+
+
+        set {_chosenClass} to cleanClassName(arg 1)
+
+
+
+
+
+
+
+        set {_classesOriginal::*} to split "{@classes}" at ", "
+
+
+
+        set {_isMain} to false
+
+
+
+        loop {_classesOriginal::*}:
+
+
+
+            if cleanClassName(loop-value) is {_chosenClass}:
+
+
+
+                set {_isMain} to true
+
+
+
+        if {_isMain} is false:
+
+
+
+            send "&cCette classe ne peut pas être choisie gratuitement."
+
+
+
+            stop
+
+
+
+        set {_valid} to false
+
+
+
+        loop {_classesOriginal::*}:
+
+
+
+            set {_loopClean} to cleanClassName(loop-value)
+
+
+
+            if {_loopClean} is {_chosenClass}:
+
+
+
+                set {_valid} to true
+
+
+
+                set {_originalName} to loop-value
+
+
+
+        if {_valid} is false:
+
+
+
+            send "&cCette classe n'existe pas."
+
+
+
+            stop
+
+
+
+
+
+
+
+        set {class.unlocked::%{_uuid}%::%{_chosenClass}%} to true
+
+
+
+        set {class.freechosen::%{_uuid}%} to {_chosenClass}
+
+
+
+        send "&aFélicitations ! Vous avez débloqué la classe gratuite : &6%{_originalName}%"
+
+
+
+        send "&7Vous pouvez maintenant l'activer avec &e/class active %{_originalName}%"
+
+
+
+
+
+#------------------------------mana----------------------------------------------------------------------
+
+command /mana [<text>] [<text>]:
+
+    trigger:
+
+        if arg-1 is not set:
+
+            send "%{mana::%player%}% / %{mana_max::%player%}%" to player
+
+            #send "%gamemode of player%" to player
+
+        if arg-1 is "style":
+
+            if arg-2 is "actionbar":
+
+                set {mana_style::%player%} to "actionbar"
+
+            else if arg-2 is "bossbar":
+
+                set {mana_style::%player%} to "bossbar"
+
+            else if arg-2 is "aucun":
+
+                set {mana_style::%player%} to "aucun"
+
+
+
+
+
+
+
+
+
